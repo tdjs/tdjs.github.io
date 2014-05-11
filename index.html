@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+	<header>
+		<title>Schulstatistiken Kanton Bern</title>
+		<meta charset="utf-8">
+		<style>
+			/* Karte */
+			.grenzen1 {
+			  fill: none;
+			  stroke: #222;
+			  stroke-width: 0.5px;
+			  stroke-linejoin: round;
+			}
+			.grenzen2 {
+			  fill: none;
+			  stroke: #777;
+			  stroke-width: 0.05px;
+			  stroke-linejoin: round;
+			}
+			.gebiet {
+			  fill: none;
+			}
+			.gebiet:hover {
+				fill: #222 !important;
+			}
+			.legende path {
+				display: none;
+			}
+			.legende line {
+				stroke: #000;
+			}
+			
+			/* Farben */
+			.q0-9 { fill:rgb(247,251,255); }
+			.q1-9 { fill:rgb(222,235,247); }
+			.q2-9 { fill:rgb(198,219,239); }
+			.q3-9 { fill:rgb(158,202,225); }
+			.q4-9 { fill:rgb(107,174,214); }
+			.q5-9 { fill:rgb(66,146,198); }
+			.q6-9 { fill:rgb(33,113,181); }
+			.q7-9 { fill:rgb(8,81,156); }
+			.q8-9 { fill:rgb(8,48,107); }
+		
+			/* Layout */
+			.menuRow {
+				width: 910px;
+				height: 70px;
+				float: left;
+			}
+			.menuEntry {
+				width: 240px;
+				height: 45px;
+				text-align: center;
+				float: left;
+				font-family:Verdana; font-size:20px;
+				color: white;
+				vertical-align: middle;
+				margin: 0px 10px 10px 0px;
+				padding: 15px 0px 0px 0px;
+				background-color: #01429E;
+				cursor: pointer; cursor: hand;
+			}
+			.menuEntry:hover {
+				background-color: #0162bE;
+			}
+			.selected {
+				background-color: #019E42;
+			}
+			.canvas {
+				background-color: #eee;
+				width: 740px;
+				height: 650px;
+				float: left;
+			}
+			.infobox {
+				margin: 0px 0px 0px 10px;
+				background-color: #eee;
+				width: 600px;
+				height: 860px;
+				float: left;
+			}
+			.infotitle {
+				height: 45px;
+				padding: 15px 0px 0px 0px;
+				text-align: center;
+				font-family:Verdana; font-size:20px;
+				vertical-align: middle;
+			}
+            table {
+              font-family: "Helvetica", "Lucida Sans", "Lucida Sans Unicode", "Luxi Sans", Tahoma, sans-serif;
+              box-shadow: 1px 1px 10px rgba(0,0,0,0.5);
+              border-collapse: collapse;
+              border-spacing: 0;
+              background-color: #eee;
+            }
+            table {
+              margin: auto;
+            }
+            table, td, th {
+              padding: 7px;
+              text-align: center;
+              border: 1px solid rgb(8,48,107);
+            }
+            th {
+              background-color: rgb(8,81,156);
+              color: white;
+            }
+		</style>
+	</header>
+	<body>
+		<script src="http://code.jquery.com/jquery-2.1.0.min.js"></script>
+		<script src="http://d3js.org/d3.v3.js"></script>
+		<script src="http://d3js.org/queue.v1.min.js"></script>
+		<script src="http://d3js.org/topojson.v1.min.js"></script>
+        <!--
+		<script src="jquery-2.1.0.min.js"></script>
+		<script src="d3.v3.min.js"></script>
+		<script src="queue.v1.min.js"></script>
+		<script src="topojson.v1.min.js"></script>
+		-->
+        <script src="bern.js"></script>
+
+		<div id="main"  style="width: 740px; float: left;" >
+			<div id="header"  style="width: 740px; float: left;">
+				<div class="menuRow">
+					<span id="btnKanton" class="menuEntry">Kanton Bern</span>
+					<span id="btnKreis" class="menuEntry">Verwaltungskreise</span>
+					<span id="btnGemeinde" class="menuEntry selected">Gemeinden</span>
+				</div>
+				<div class="menuRow">
+					<span id="btnFrauen" class="menuEntry">Anteil Frauen</span>
+					<span id="btnAuslaender" class="menuEntry selected">Anteil Ausländer</span>
+					<span id="btnFremdsprachige" class="menuEntry">Anteil Fremdsprachige</span>
+				</div>
+				<div class="menuRow">
+					<span id="btnStufe1" class="menuEntry selected">Vorschulstufe</span>
+					<span id="btnStufe2" class="menuEntry selected">Primarstufe</span>
+					<span id="btnStufe3" class="menuEntry selected">Sekundarstufe I</span>
+				</div>
+			</div>
+			<div id="canvas" class="canvas"></div>
+		</div>
+		<div id="infobox" class="infobox">
+			<div id="txtInfoTitle" class="infotitle"></div>
+			<table>
+				<thead>
+					<th></th>
+					<th>Schüler</th>
+					<th>davon<br/>Frauen</th>
+					<th>davon<br/>Ausländer</th>
+					<th>davon<br/>Fremdsprachige</th>
+				</thead>
+				<tbody id="infocontent">
+					<tr>
+						<td id="txtTotal">Total</td>
+						<td id="txtSchueler"></td>
+						<td id="txtFrauen"></td>
+						<td id="txtAuslaender"></td>
+						<td id="txtFremdsprachige"></td>
+					</tr>
+				</tbody>
+			</table>
+			<div style="height: 50px"></div>
+			<table>
+				<thead>
+					<th id="txtSubtyp">Total</th>
+					<th>Schüler</th>
+					<th>davon<br/>Frauen</th>
+					<th>davon<br/>Ausländer</th>
+					<th>davon<br/>Fremdsprachige</th>
+				</thead>
+				<tbody id="infodetails">
+				</tbody>
+			</table>
+		</div>
+
+	</body>
+	</html>
+	
